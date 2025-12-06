@@ -1,145 +1,72 @@
 get_next_line
-Reading a line from a file descriptor, one line at a time - A 42 School project.
-Table of Contents
-
-Overview
-How It Works
-Implementation Strategy
-Function Prototype
-Compilation
-Project Structure
-Usage Examples
-Testing
-Common Issues & Solutions
-Bonus Part
-
-Overview
-get_next_line is a function that reads a file descriptor and returns a line ending with a newline character (when present). Each call returns the next line until EOF is reached. This project teaches you about static variables, buffer management, and efficient file reading.
-How It Works
-The function uses a static variable to store leftover data between calls:
-
-Read BUFFER_SIZE bytes from the file descriptor
-Store what you read in a static variable
-Extract one line (up to \n or EOF)
-Save the remaining data for the next call
-Return the extracted line
-
-Visual Example
-File content: "Hello\nWorld\n42\n"
-BUFFER_SIZE: 5
-
-Call 1: Read "Hello" → return "Hello\n"
-Call 2: Read "\nWorl" → return "World\n"
-Call 3: Read "d\n42\n" → return "42\n"
-Call 4: return NULL (EOF)
-Implementation Strategy
-Step 1: Helper Functions (get_next_line_utils.c)
-You'll need utility functions similar to:
-csize_t  ft_strlen(const char *s);
-char    *ft_strchr(const char *s, int c);
-char    *ft_strjoin(char const *s1, char const *s2);
-char    *ft_substr(char const *s, unsigned int start, size_t len);
-// Add any other helpers you need
-```
-
-### Step 2: Core Logic (get_next_line.c)
-
-**Pseudocode approach:**
-```
-function get_next_line(fd):
-    static buffer (preserves data between calls)
-    
-    if fd is invalid or BUFFER_SIZE <= 0:
-        return NULL
-    
-    # Read from fd until you find '\n' or reach EOF
-    while no newline found in buffer:
-        read BUFFER_SIZE bytes into temp
-        if read error:
-            return NULL
-        if nothing read (EOF):
-            break
-        append temp to buffer
-    
-    # Extract one line from buffer
-    if buffer has content:
-        find position of '\n'
-        extract line (including '\n')
-        save remainder back to buffer
-        return line
-    
-    return NULL
-Step 3: Key Considerations
-Static Variable:
-cstatic char *saved = NULL; // Persists between function calls
-Reading Loop:
-
-Use read() to get BUFFER_SIZE bytes at a time
-Keep reading until you find \n or reach EOF
-Append each read to your saved buffer
-
-Line Extraction:
-
-Find the first \n in your buffer
-Create a new string from start to \n (inclusive)
-Update the static variable with remaining data
-
-Memory Management:
-
-Always free memory you don't need anymore
-Update your static variable carefully
-Free and set to NULL when done reading
-
+A C function that reads and returns one line at a time from a file descriptor.
+Description
+get_next_line reads from a file descriptor and returns one line ending with a newline character. Calling the function repeatedly allows reading a text file line by line until the end.
 Function Prototype
 cchar *get_next_line(int fd);
 Parameters:
 
-fd: File descriptor to read from (0 for stdin, or from open())
+fd - File descriptor to read from
 
 Return:
 
-Line read (with \n if present)
-NULL if nothing left to read or error
+The line read including the \n character (except at EOF without \n)
+NULL if there's nothing left to read or an error occurred
 
+File Descriptors (fd)
+What is a File Descriptor?
+A file descriptor is a non-negative integer that acts as a reference to an open file or input/output resource. The operating system uses it to keep track of open files.
+Standard File Descriptors
+fdNameDescription0stdinStandard input (keyboard)1stdoutStandard output (screen)2stderrStandard error (screen)
+Using File Descriptors
+Opening a file:
+cint fd;
+fd = open("file.txt", O_RDONLY);  // Returns fd (e.g., 3, 4, 5...)
+if (fd == -1)
+    // Error: file couldn't be opened
+Reading from different sources:
+c// Reading from a file
+int fd = open("text.txt", O_RDONLY);
+char *line = get_next_line(fd);
+close(fd);
+
+// Reading from standard input (keyboard)
+char *line = get_next_line(0);
+
+// Reading from multiple files
+int fd1 = open("file1.txt", O_RDONLY);  // fd = 3
+int fd2 = open("file2.txt", O_RDONLY);  // fd = 4
+char *line1 = get_next_line(fd1);
+char *line2 = get_next_line(fd2);
+File Descriptor Numbers
+
+File descriptors start at 0 (stdin), 1 (stdout), 2 (stderr)
+When you open files, the system assigns the next available number (usually 3, 4, 5...)
+Maximum number of open file descriptors is system-dependent (typically 1024)
+Each fd maintains its own read position in the file
+
+fd Validation
+Your function should handle invalid file descriptors:
+c// Invalid cases:
+get_next_line(-1);          // Negative fd
+get_next_line(1000000);     // fd not opened
+get_next_line(closed_fd);   // fd that was already closed
 Compilation
-bash# Mandatory
-cc -Wall -Wextra -Werror -D BUFFER_SIZE=42 get_next_line.c get_next_line_utils.c main.c
+bashcc -Wall -Wextra -Werror -D BUFFER_SIZE=42 get_next_line.c get_next_line_utils.c
+The BUFFER_SIZE can be changed during compilation (e.g., -D BUFFER_SIZE=1 or -D BUFFER_SIZE=9999).
+Files
+Mandatory:
 
-# Test with different buffer sizes
-cc -Wall -Wextra -Werror -D BUFFER_SIZE=1 ...
-cc -Wall -Wextra -Werror -D BUFFER_SIZE=9999 ...
+get_next_line.c
+get_next_line_utils.c
+get_next_line.h
 
-# Bonus
-cc -Wall -Wextra -Werror -D BUFFER_SIZE=42 get_next_line_bonus.c get_next_line_bonus_utils.c main.c
-```
+Bonus:
 
-## Project Structure
-```
-get_next_line/
-├── get_next_line.c          # Main function
-├── get_next_line_utils.c    # Helper functions
-├── get_next_line.h          # Header file
-├── get_next_line_bonus.c    # Bonus: multiple fd support
-├── get_next_line_bonus_utils.c
-├── get_next_line_bonus.h
-└── README.md
-get_next_line.h example:
-c#ifndef GET_NEXT_LINE_H
-# define GET_NEXT_LINE_H
+get_next_line_bonus.c
+get_next_line_bonus_utils.c
+get_next_line_bonus.h
 
-# include <stdlib.h>
-# include <unistd.h>
-
-# ifndef BUFFER_SIZE
-#  define BUFFER_SIZE 42
-# endif
-
-char    *get_next_line(int fd);
-// Your utility functions prototypes
-char    *ft_strjoin(char const *s1, char const *s2);
-// etc...
-
-#endif
 Usage Examples
 Example 1: Reading a File
 c#include "get_next_line.h"
@@ -148,20 +75,22 @@ c#include "get_next_line.h"
 
 int main(void)
 {
-    int     fd;
-    char    *line;
-    int     line_count;
+    int fd;
+    char *line;
 
-    fd = open("test.txt", O_RDONLY);
+    fd = open("file.txt", O_RDONLY);
     if (fd == -1)
+    {
+        printf("Error opening file\n");
         return (1);
+    }
     
-    line_count = 1;
     while ((line = get_next_line(fd)) != NULL)
     {
-        printf("Line %d: %s", line_count++, line);
+        printf("%s", line);
         free(line);
     }
+    
     close(fd);
     return (0);
 }
@@ -173,151 +102,96 @@ int main(void)
 {
     char *line;
 
-    printf("Enter text (Ctrl+D to stop):\n");
-    while ((line = get_next_line(0)) != NULL)
+    printf("Enter text:\n");
+    while ((line = get_next_line(0)) != NULL)  // fd 0 = stdin
     {
-        printf("You wrote: %s", line);
+        printf("You entered: %s", line);
         free(line);
     }
     return (0);
 }
-Example 3: Bonus - Multiple File Descriptors
+Example 3: Reading Multiple Files (Bonus)
 c#include "get_next_line_bonus.h"
 #include <fcntl.h>
 #include <stdio.h>
 
 int main(void)
 {
-    int fd1, fd2;
-    char *line1, *line2;
+    int fd1, fd2, fd3;
+    char *line;
 
-    fd1 = open("file1.txt", O_RDONLY);
-    fd2 = open("file2.txt", O_RDONLY);
+    fd1 = open("file1.txt", O_RDONLY);  // fd1 = 3
+    fd2 = open("file2.txt", O_RDONLY);  // fd2 = 4
+    fd3 = open("file3.txt", O_RDONLY);  // fd3 = 5
 
-    line1 = get_next_line(fd1);
-    line2 = get_next_line(fd2);
-    line1 = get_next_line(fd1);
-    line2 = get_next_line(fd2);
+    // Read alternately from different files
+    line = get_next_line(fd1);  // Line 1 from file1
+    printf("fd1: %s", line);
+    free(line);
 
-    // Should read alternately from both files correctly
-    
+    line = get_next_line(fd2);  // Line 1 from file2
+    printf("fd2: %s", line);
+    free(line);
+
+    line = get_next_line(fd1);  // Line 2 from file1
+    printf("fd1: %s", line);
+    free(line);
+
+    line = get_next_line(fd3);  // Line 1 from file3
+    printf("fd3: %s", line);
+    free(line);
+
     close(fd1);
     close(fd2);
+    close(fd3);
     return (0);
 }
-Testing
-Create Test Files
-bashecho -e "Line 1\nLine 2\nLine 3" > test.txt
-echo -e "A\nB\nC\nD\nE\nF\nG" > test2.txt
-echo "No newline at end" > test3.txt
-touch empty.txt
-Test Cases to Cover
-
-Normal files with multiple lines
-Empty files
-Files without newline at end
-Single character lines
-Very long lines (longer than BUFFER_SIZE)
-BUFFER_SIZE = 1 (hardest case)
-BUFFER_SIZE = 9999 (large buffer)
-Binary files
-stdin (read from terminal)
-Invalid fd (negative, closed, etc.)
-Multiple fds simultaneously (bonus)
-
-Quick Test Script
-bash#!/bin/bash
-for size in 1 10 42 1000 9999; do
-    echo "Testing with BUFFER_SIZE=$size"
-    cc -Wall -Wextra -Werror -D BUFFER_SIZE=$size get_next_line.c get_next_line_utils.c main.c
-    ./a.out
-    echo "---"
-done
-Use Testers
-
-Tripouille/gnlTester
-xicodomingues/francinette
-
-Common Issues & Solutions
-Issue 1: Memory Leaks
-Problem: Not freeing allocated memory properly
-Solution:
-c// Always free temp variables you don't return
-char *temp = malloc(...);
-// use temp
-free(temp);
-
-// Free and update static variable carefully
-free(saved);
-saved = new_value;
-Issue 2: Segmentation Fault
-Common causes:
-
-Accessing NULL pointers
-Not checking read() return value
-Not checking malloc() return value
-
-Solution: Add protective checks everywhere:
-cif (!buffer)
-    return (NULL);
-if (bytes_read == -1)
-{
-    free(saved);
-    saved = NULL;
-    return (NULL);
-}
-Issue 3: Infinite Loop
-Problem: Not handling EOF correctly
-Solution: Check if read() returns 0 (EOF) and break the loop
-Issue 4: Wrong Output with BUFFER_SIZE=1
-Problem: Off-by-one errors, character-by-character reading not handled
-Solution: Make sure your logic works for single character reads
-Issue 5: Static Variable Not Updating
-Problem: Line is returned but leftover data is lost
-Solution:
-c// After extracting line, update static:
-char *new_saved = ft_strdup(saved + newline_position + 1);
-free(saved);
-saved = new_saved;
 Bonus Part
-Multiple File Descriptors
-The bonus requires handling multiple file descriptors simultaneously:
-cstatic char *saved[OPEN_MAX]; // or use fd as index: saved[fd]
-// or
-static char *saved[1024]; // reasonable limit
+The bonus handles multiple file descriptors simultaneously without losing the reading position of each.
+How Bonus Works
+c// Instead of one static variable:
+static char *buffer;
 
-// In your function:
-char *get_next_line(int fd)
-{
-    static char *saved[1024];
-    
-    // Use saved[fd] instead of just saved
-    // Each fd gets its own buffer
-}
-Key points:
+// Use an array indexed by fd:
+static char *buffer[OPEN_MAX];  // or buffer[1024]
 
-Each file descriptor needs its own static buffer
-Use an array of static pointers indexed by fd
-OPEN_MAX or 1024 is usually sufficient for the array size
-Don't forget to handle each fd independently
-
+// Each fd gets its own buffer:
+buffer[fd1] stores data for fd1
+buffer[fd2] stores data for fd2
+buffer[fd3] stores data for fd3
+This allows reading from multiple files in any order while maintaining each file's position:
+cget_next_line(3);  // Read from fd 3
+get_next_line(5);  // Read from fd 5
+get_next_line(3);  // Continue from fd 3 where we left off
+get_next_line(4);  // Read from fd 4
+get_next_line(5);  // Continue from fd 5 where we left off
 Allowed Functions
 
-read
-malloc
-free
+read - Read from file descriptor
+malloc - Allocate memory
+free - Free allocated memory
 
-Forbidden
+Key Concepts
 
-Global variables
-Libft (must rewrite needed functions)
-lseek()
-Your own implementations of forbidden functions
+Static variables to preserve data between function calls
+File descriptors as references to open files
+Buffer management for efficient reading
+Dynamic memory allocation and proper memory management
+Multiple fd handling (bonus) using static arrays
 
-Evaluation Tips
+Testing
+Test your function with:
 
-Test with valgrind: valgrind --leak-check=full ./a.out
-Compile with different BUFFER_SIZE values
-Test edge cases during defense
-Be ready to explain static variables
-Know exactly how your memory management works
+Different BUFFER_SIZE values (1, 10, 42, 1000, 10000)
+Various file types (text files, empty files, files without final newline)
+Standard input (fd 0)
+Invalid file descriptors (negative numbers, closed fds)
+Multiple file descriptors simultaneously (bonus)
+
+bash# Test with different buffer sizes
+cc -Wall -Wextra -Werror -D BUFFER_SIZE=1 ...
+cc -Wall -Wextra -Werror -D BUFFER_SIZE=42 ...
+cc -Wall -Wextra -Werror -D BUFFER_SIZE=9999 ...
+
+# Check for memory leaks
+valgrind --leak-check=full ./a.out
