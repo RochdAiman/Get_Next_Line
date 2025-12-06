@@ -1,197 +1,102 @@
-get_next_line
-A C function that reads and returns one line at a time from a file descriptor.
-Description
-get_next_line reads from a file descriptor and returns one line ending with a newline character. Calling the function repeatedly allows reading a text file line by line until the end.
-Function Prototype
-cchar *get_next_line(int fd);
-Parameters:
+# get_next_line
 
-fd - File descriptor to read from
+## Description
 
-Return:
+**get_next_line** is a C function designed to read a file or an input stream one line at a time. Each call to `get_next_line` returns the next line of input, making it ideal for processing files or input streams in a memory-efficient, controlled manner.
 
-The line read including the \n character (except at EOF without \n)
-NULL if there's nothing left to read or an error occurred
+This project is a staple in the 42 cursus and aims to develop robust file I/O and dynamic memory management skills.
 
-File Descriptors (fd)
-What is a File Descriptor?
-A file descriptor is a non-negative integer that acts as a reference to an open file or input/output resource. The operating system uses it to keep track of open files.
-Standard File Descriptors
-fdNameDescription0stdinStandard input (keyboard)1stdoutStandard output (screen)2stderrStandard error (screen)
-Using File Descriptors
-Opening a file:
-cint fd;
-fd = open("file.txt", O_RDONLY);  // Returns fd (e.g., 3, 4, 5...)
-if (fd == -1)
-    // Error: file couldn't be opened
-Reading from different sources:
-c// Reading from a file
-int fd = open("text.txt", O_RDONLY);
-char *line = get_next_line(fd);
-close(fd);
+## Features
 
-// Reading from standard input (keyboard)
-char *line = get_next_line(0);
+- Reads from any valid file descriptor (including files, `stdin`, etc.).
+- Returns the next line from the given descriptor with each call.
+- Handles multiple file descriptors simultaneously.
+- Efficient memory usage and line buffering.
+- Does **not** retain newlines at the end of lines (except as required).
 
-// Reading from multiple files
-int fd1 = open("file1.txt", O_RDONLY);  // fd = 3
-int fd2 = open("file2.txt", O_RDONLY);  // fd = 4
-char *line1 = get_next_line(fd1);
-char *line2 = get_next_line(fd2);
-File Descriptor Numbers
+## Usage
 
-File descriptors start at 0 (stdin), 1 (stdout), 2 (stderr)
-When you open files, the system assigns the next available number (usually 3, 4, 5...)
-Maximum number of open file descriptors is system-dependent (typically 1024)
-Each fd maintains its own read position in the file
+### Function Prototype
 
-fd Validation
-Your function should handle invalid file descriptors:
-c// Invalid cases:
-get_next_line(-1);          // Negative fd
-get_next_line(1000000);     // fd not opened
-get_next_line(closed_fd);   // fd that was already closed
-Compilation
-bashcc -Wall -Wextra -Werror -D BUFFER_SIZE=42 get_next_line.c get_next_line_utils.c
-The BUFFER_SIZE can be changed during compilation (e.g., -D BUFFER_SIZE=1 or -D BUFFER_SIZE=9999).
-Files
-Mandatory:
+```c
+char *get_next_line(int fd);
+```
 
-get_next_line.c
-get_next_line_utils.c
-get_next_line.h
+- **fd**: File descriptor to read from.
 
-Bonus:
+### Return Value
 
-get_next_line_bonus.c
-get_next_line_bonus_utils.c
-get_next_line_bonus.h
+- Returns a pointer to the next line read from `fd` (including the newline character if present).
+- Returns `NULL` when there is nothing else to read or on error.
 
-Usage Examples
-Example 1: Reading a File
-c#include "get_next_line.h"
+### Example
+
+```c
+#include "get_next_line.h"
 #include <fcntl.h>
 #include <stdio.h>
 
 int main(void)
 {
-    int fd;
+    int fd = open("file.txt", O_RDONLY);
     char *line;
 
-    fd = open("file.txt", O_RDONLY);
-    if (fd == -1)
-    {
-        printf("Error opening file\n");
-        return (1);
-    }
-    
     while ((line = get_next_line(fd)) != NULL)
     {
         printf("%s", line);
         free(line);
     }
-    
     close(fd);
-    return (0);
+    return 0;
 }
-Example 2: Reading from stdin
-c#include "get_next_line.h"
-#include <stdio.h>
+```
 
-int main(void)
-{
-    char *line;
+## Installation
 
-    printf("Enter text:\n");
-    while ((line = get_next_line(0)) != NULL)  // fd 0 = stdin
-    {
-        printf("You entered: %s", line);
-        free(line);
-    }
-    return (0);
-}
-Example 3: Reading Multiple Files (Bonus)
-c#include "get_next_line_bonus.h"
-#include <fcntl.h>
-#include <stdio.h>
+1. **Clone the repository:**
+    ```bash
+    git clone https://github.com/<your-username>/get_next_line.git
+    cd get_next_line
+    ```
 
-int main(void)
-{
-    int fd1, fd2, fd3;
-    char *line;
+2. **Compile the library:**
+    ```bash
+    make
+    ```
 
-    fd1 = open("file1.txt", O_RDONLY);  // fd1 = 3
-    fd2 = open("file2.txt", O_RDONLY);  // fd2 = 4
-    fd3 = open("file3.txt", O_RDONLY);  // fd3 = 5
+    This will generate `get_next_line.a`.
 
-    // Read alternately from different files
-    line = get_next_line(fd1);  // Line 1 from file1
-    printf("fd1: %s", line);
-    free(line);
+3. **Include the header and link the library in your project:**
+    - Add `#include "get_next_line.h"` to your source files.
+    - Compile your code with the library, e.g.:
+        ```bash
+        gcc main.c -L. -lget_next_line
+        ```
 
-    line = get_next_line(fd2);  // Line 1 from file2
-    printf("fd2: %s", line);
-    free(line);
+## Files
 
-    line = get_next_line(fd1);  // Line 2 from file1
-    printf("fd1: %s", line);
-    free(line);
+- `get_next_line.c` - Main function implementation.
+- `get_next_line.h` - Header file with function prototype(s).
+- `get_next_line_utils.c` - Helper functions, if any.
+- `Makefile` - Compilation recipes.
 
-    line = get_next_line(fd3);  // Line 1 from file3
-    printf("fd3: %s", line);
-    free(line);
+## Project Constraints
 
-    close(fd1);
-    close(fd2);
-    close(fd3);
-    return (0);
-}
-Bonus Part
-The bonus handles multiple file descriptors simultaneously without losing the reading position of each.
-How Bonus Works
-c// Instead of one static variable:
-static char *buffer;
+- No use of static or global variables (unless required by subject).
+- Memory leaks or invalid reads are **not** allowed.
+- Only authorized standard C functions (e.g., `read`, `malloc`, `free`).
+- The buffer size is controlled by the `BUFFER_SIZE` macro.
 
-// Use an array indexed by fd:
-static char *buffer[OPEN_MAX];  // or buffer[1024]
+## Testing
 
-// Each fd gets its own buffer:
-buffer[fd1] stores data for fd1
-buffer[fd2] stores data for fd2
-buffer[fd3] stores data for fd3
-This allows reading from multiple files in any order while maintaining each file's position:
-cget_next_line(3);  // Read from fd 3
-get_next_line(5);  // Read from fd 5
-get_next_line(3);  // Continue from fd 3 where we left off
-get_next_line(4);  // Read from fd 4
-get_next_line(5);  // Continue from fd 5 where we left off
-Allowed Functions
+- You can test the project with your own files or tools.
+- Try varying `BUFFER_SIZE` for robustness.
 
-read - Read from file descriptor
-malloc - Allocate memory
-free - Free allocated memory
+## Authors
 
-Key Concepts
+- [Aiman Rochd](https://github.com/RochdAiman)
 
-Static variables to preserve data between function calls
-File descriptors as references to open files
-Buffer management for efficient reading
-Dynamic memory allocation and proper memory management
-Multiple fd handling (bonus) using static arrays
+---
 
-Testing
-Test your function with:
+> _Project part of 42 School curriculum._
 
-Different BUFFER_SIZE values (1, 10, 42, 1000, 10000)
-Various file types (text files, empty files, files without final newline)
-Standard input (fd 0)
-Invalid file descriptors (negative numbers, closed fds)
-Multiple file descriptors simultaneously (bonus)
-
-bash# Test with different buffer sizes
-cc -Wall -Wextra -Werror -D BUFFER_SIZE=1 ...
-cc -Wall -Wextra -Werror -D BUFFER_SIZE=42 ...
-cc -Wall -Wextra -Werror -D BUFFER_SIZE=9999 ...
-
-# Check for memory leaks
-valgrind --leak-check=full ./a.out
